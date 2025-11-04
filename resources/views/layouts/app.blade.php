@@ -184,11 +184,6 @@
       <div class="text-sm text-[var(--ink-2)]">
         © {{ date('Y') }} • <strong>Ruang Andalan</strong>
       </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <a href="{{ route('bookings.week') }}"   class="cta inline-flex items-center gap-2 rounded-full px-4 py-2.5 btn-outline">📅 Kalender</a>
-        <a href="{{ route('bookings.index') }}"  class="cta inline-flex items-center gap-2 rounded-full px-4 py-2.5 btn-outline">📋 Jadwal</a>
-        <a href="{{ route('bookings.create') }}" class="cta inline-flex items-center gap-2 rounded-full px-4 py-2.5 btn-filled">⚡ Buat</a>
-      </div>
     </div>
   </footer>
 

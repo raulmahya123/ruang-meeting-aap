@@ -7,6 +7,7 @@ use App\Models\Room;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
 
 class BookingController extends Controller
 {
@@ -51,15 +52,21 @@ class BookingController extends Controller
     {
         $tz = 'Asia/Jakarta';
 
+        // Samakan dengan enum di migration
+        $divisions = ['HR','SCM','ENG','HSE','OPS','FIN','IT','MIN'];
+
         $data = $request->validate([
-            'room_id'         => ['required', 'exists:rooms,id'],
-            'title'           => ['required', 'string', 'max:200'],
-            'start_at'        => ['required', 'date'],
-            'end_at'          => ['required', 'date', 'after:start_at'],
-            'booked_by_name'  => ['required', 'string', 'max:120'],
-            'booked_by_email' => ['nullable', 'email'],
-            'notes'           => ['nullable', 'string', 'max:2000'],
+            'room_id'        => ['required', 'exists:rooms,id'],
+            'title'          => ['required', 'string', 'max:200'],
+            'start_at'       => ['required', 'date'],
+            'end_at'         => ['required', 'date', 'after:start_at'],
+            'booked_by_name' => ['required', 'string', 'max:120'],
+            'division'       => ['required', Rule::in($divisions)],
+            'notes'          => ['nullable', 'string', 'max:2000'],
         ]);
+
+        // Normalisasi division ke UPPER
+        $data['division'] = strtoupper($data['division']);
 
         // Parse input lokal → simpan UTC
         $startUtc = Carbon::parse($data['start_at'], $tz)->timezone('UTC');
@@ -78,14 +85,14 @@ class BookingController extends Controller
         }
 
         $booking = Booking::create([
-            'room_id'         => $data['room_id'],
-            'title'           => $data['title'],
-            'start_at'        => $startUtc,
-            'end_at'          => $endUtc,
-            'booked_by_name'  => $data['booked_by_name'],
-            'booked_by_email' => $data['booked_by_email'] ?? null,
-            'notes'           => $data['notes'] ?? null,
-            'cancel_token'    => Str::random(48),
+            'room_id'        => $data['room_id'],
+            'title'          => $data['title'],
+            'start_at'       => $startUtc,
+            'end_at'         => $endUtc,
+            'booked_by_name' => $data['booked_by_name'],
+            'division'       => $data['division'],
+            'notes'          => $data['notes'] ?? null,
+            'cancel_token'   => Str::random(48),
         ]);
 
         return redirect()
@@ -177,7 +184,7 @@ class BookingController extends Controller
         $hours     = range($hourStart, $hourEnd - 1);
         $rowHeight = 48; // h-12 di Tailwind
 
-        // Kompat: kirimkan juga key lama (weekStart/weekEnd/date) kalau Blade kamu masih pakai itu
+        // Kompat: kirimkan juga key lama (weekStart/weekEnd/date) kalau Blade masih pakai itu
         $weekStart = $weekStartLocal;
         $weekEnd   = $weekEndLocal;
         $date      = $dateLocal;

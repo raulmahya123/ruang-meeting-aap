@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-// app/Models/Booking.php
 class Booking extends Model
 {
     protected $fillable = [
@@ -14,7 +13,7 @@ class Booking extends Model
         'start_at',
         'end_at',
         'booked_by_name',
-        'booked_by_email',
+        'division',      // ← ganti email → division
         'notes',
         'cancel_token',
     ];
@@ -24,7 +23,7 @@ class Booking extends Model
         'end_at'   => 'datetime',
     ];
 
-    public function room()
+    public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);
     }
