@@ -122,12 +122,12 @@
     <div class="{{ $cardWrap }}">
       <div class="px-4 sm:px-6 py-4 border-b flex items-center gap-2">
         <span class="{{ $chipMaroon }}">2</span>
-        <h2 class="font-semibold text-gray-900">Data Pemesan</h2>
+        <h2 class="font-semibold text-gray-900">Data Pembooking</h2>
       </div>
 
       <div class="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div>
-          <label class="{{ $labelBase }}">Nama Pemesan</label>
+          <label class="{{ $labelBase }}">Nama Pembooking</label>
           <input type="text" name="booked_by_name"
                  value="{{ old('booked_by_name') }}"
                  maxlength="120"
