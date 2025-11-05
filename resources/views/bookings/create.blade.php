@@ -1,7 +1,7 @@
 {{-- resources/views/bookings/create.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Booking Baru')
+@section('title', 'Pengguna Baru')
 
 @section('content')
 @php
@@ -59,7 +59,7 @@
           </svg>
         </div>
         <div>
-          <h1 class="text-xl sm:text-2xl font-semibold text-[color:var(--brand-maroon)]">Buat Booking</h1>
+          <h1 class="text-xl sm:text-2xl font-semibold text-[color:var(--brand-maroon)]">Buat Pengguna</h1>
           <p class="text-xs text-gray-600">Zona waktu: {{ $tz }}.</p>
         </div>
       </div>
@@ -177,12 +177,12 @@
     <div class="{{ $cardWrap }}">
       <div class="px-4 sm:px-6 py-4 border-b flex items-center gap-2">
         <span class="{{ $chipMaroon }}">2</span>
-        <h2 class="font-semibold text-gray-900">Data Pembooking</h2>
+        <h2 class="font-semibold text-gray-900">Data Pengguna</h2>
       </div>
 
       <div class="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
         <div>
-          <label class="{{ $labelBase }}">Nama Pembooking</label>
+          <label class="{{ $labelBase }}">Nama Pengguna</label>
           <input type="text" name="booked_by_name"
                  value="{{ old('booked_by_name') }}"
                  maxlength="120"
@@ -221,7 +221,7 @@
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
       <div class="flex items-center gap-2">
         <a href="{{ route('bookings.week') }}" class="{{ $btnOutline }}">Batal</a>
-        <button class="{{ $btnFilled }}">Simpan Booking</button>
+        <button class="{{ $btnFilled }}">Simpan Pengguna</button>
       </div>
     </div>
   </form>
