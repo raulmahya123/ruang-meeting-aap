@@ -26,7 +26,7 @@
     'OPS' => 'Operations',
     'FIN' => 'Finance',
     'IT'  => 'Information Technology',
-    'PLT' => 'Plantat',
+    'PLT' => 'Plant',
     'MGN' => 'Management',
   ];
   $selectedDiv = old('division', request('division'));
