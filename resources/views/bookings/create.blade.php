@@ -14,7 +14,7 @@
   $cardWrap    = 'bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden';
   $tz = 'Asia/Jakarta';
 
-  // Divisi (sugesti)
+  // Divisi (SESUAI ENUM MIGRASI: HR, SCM, ENG, HSE, OPS, FIN, IT, MIN)
   $divOptions = [
     'HR'  => 'Human Resources',
     'SCM' => 'Supply Chain',
@@ -23,8 +23,7 @@
     'OPS' => 'Operations',
     'FIN' => 'Finance',
     'IT'  => 'Information Technology',
-    'MGN' => 'Management',
-    'AST' => 'Asset Management',
+    'MIN' => 'Mining / Site',
   ];
   $selectedDiv = old('division', request('division'));
 @endphp
@@ -99,23 +98,39 @@
           @error('title') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Mulai & Selesai (satu field masing2, 24 jam, tanpa AM/PM) --}}
+        {{-- Mulai (tanggal + waktu, 24 jam, tanpa AM/PM) --}}
         <div>
           <label class="{{ $labelBase }}">Mulai ({{ $tz }})</label>
-          <input id="start_at" type="datetime-local" name="start_at"
-                 value="{{ old('start_at', request('start_at')) }}"
-                 class="{{ $inputBase }}" required>
+          <div class="flex gap-2">
+            <input id="start_date" type="date" lang="id-ID"
+                   value="{{ old('start_date') ?: (request('start_at') ? \Illuminate\Support\Str::of(request('start_at'))->substr(0,10) : '') }}"
+                   class="{{ $inputBase }} flex-1" required>
+            <input id="start_time" type="time" lang="id-ID" step="60"
+                   value="{{ old('start_time') ?: (request('start_at') ? \Illuminate\Support\Str::of(request('start_at'))->substr(11,5) : '') }}"
+                   class="{{ $inputBase }} w-40" required>
+          </div>
+          <p class="text-[11px] text-gray-500 mt-1">Format 24-jam, contoh 14:30.</p>
           @error('start_at') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
         </div>
 
+        {{-- Selesai (tanggal + waktu) --}}
         <div>
           <label class="{{ $labelBase }}">Selesai ({{ $tz }})</label>
-          <input id="end_at" type="datetime-local" name="end_at"
-                 value="{{ old('end_at', request('end_at')) }}"
-                 class="{{ $inputBase }}" required>
+          <div class="flex gap-2">
+            <input id="end_date" type="date" lang="id-ID"
+                   value="{{ old('end_date') ?: (request('end_at') ? \Illuminate\Support\Str::of(request('end_at'))->substr(0,10) : '') }}"
+                   class="{{ $inputBase }} flex-1" required>
+            <input id="end_time" type="time" lang="id-ID" step="60"
+                   value="{{ old('end_time') ?: (request('end_at') ? \Illuminate\Support\Str::of(request('end_at'))->substr(11,5) : '') }}"
+                   class="{{ $inputBase }} w-40" required>
+          </div>
+          <p class="text-[11px] text-gray-500 mt-1">Akan otomatis diisi +60 menit setelah “Mulai” diubah jika masih kosong.</p>
           @error('end_at') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
-          <p class="text-[11px] text-gray-500 mt-1">Akan otomatis diisi +60 menit setelah “Mulai” diubah.</p>
         </div>
+
+        {{-- Hidden fields yang dipakai server (datetime-local ISO tanpa detik) --}}
+        <input type="hidden" name="start_at" id="start_at" value="{{ old('start_at', request('start_at')) }}">
+        <input type="hidden" name="end_at" id="end_at" value="{{ old('end_at', request('end_at')) }}">
       </div>
     </div>
 
@@ -173,50 +188,78 @@
   </form>
 </div>
 
-{{-- Interaksi kecil: auto +60m & validasi sederhana --}}
+{{-- Interaksi: gabung date+time ke hidden; auto +60m; Ctrl/Cmd+Enter submit --}}
 <script>
   const pad = n => String(n).padStart(2,'0');
+  const toLocalInput = d =>
+    `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-  function parseLocal(dtStr){
-    if(!dtStr) return null;
-    const [d,t] = dtStr.split('T'); if(!t) return null;
-    const [y,m,day] = d.split('-').map(Number);
-    const [hh,mm] = t.split(':').map(Number);
-    return new Date(y, (m-1), day, hh, mm, 0, 0);
+  function readStart() {
+    const sd = document.getElementById('start_date').value;
+    const st = document.getElementById('start_time').value;
+    return (sd && st) ? new Date(`${sd}T${st}:00`) : null;
   }
-  function toLocalInput(d){
-    if(!d) return '';
-    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  function readEnd() {
+    const ed = document.getElementById('end_date').value;
+    const et = document.getElementById('end_time').value;
+    return (ed && et) ? new Date(`${ed}T${et}:00`) : null;
   }
 
-  function autoEndPlus60(){
-    const s = document.getElementById('start_at');
-    const e = document.getElementById('end_at');
-    const sd = parseLocal(s.value);
-    if(!sd) return;
-    const ed = new Date(sd.getTime() + 60*60000);
-    if(!e.value || parseLocal(e.value) <= sd){
-      e.value = toLocalInput(ed);
+  function syncHidden() {
+    const s = readStart();
+    const e = readEnd();
+    if (s) document.getElementById('start_at').value = toLocalInput(s);
+    if (e) document.getElementById('end_at').value   = toLocalInput(e);
+  }
+
+  function autoEndPlus60IfEmpty() {
+    const s = readStart(); if (!s) return;
+    const endDate = document.getElementById('end_date');
+    const endTime = document.getElementById('end_time');
+    if (!endDate.value || !endTime.value) {
+      const e = new Date(s.getTime() + 60*60000);
+      endDate.value = `${e.getFullYear()}-${pad(e.getMonth()+1)}-${pad(e.getDate())}`;
+      endTime.value = `${pad(e.getHours())}:${pad(e.getMinutes())}`;
+    }
+  }
+
+  function ensureEndAfterStart() {
+    const s = readStart(); const e = readEnd();
+    if (!s || !e) return;
+    if (e <= s) {
+      const adj = new Date(s.getTime() + 60*60000);
+      document.getElementById('end_date').value = `${adj.getFullYear()}-${pad(adj.getMonth()+1)}-${pad(adj.getDate())}`;
+      document.getElementById('end_time').value = `${pad(adj.getHours())}:${pad(adj.getMinutes())}`;
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('booking-form');
-    const s = document.getElementById('start_at');
-    const e = document.getElementById('end_at');
+    ['start_date','start_time','end_date','end_time'].forEach(id => {
+      const el = document.getElementById(id);
+      el?.addEventListener('change', () => {
+        if (id === 'start_date' || id === 'start_time') autoEndPlus60IfEmpty();
+        ensureEndAfterStart();
+        syncHidden();
+      });
+    });
 
-    // Prefill: kalau start ada dan end kosong → +60m
-    if(s.value && !e.value){ autoEndPlus60(); }
-
-    s.addEventListener('change', autoEndPlus60);
+    // Prefill end jika start sudah ada dan end kosong (mis. dari query string)
+    autoEndPlus60IfEmpty();
+    ensureEndAfterStart();
+    syncHidden();
 
     // Ctrl/Cmd + Enter = submit
     form.addEventListener('keydown', (ev) => {
-      if((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter'){
+      if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') {
         ev.preventDefault();
+        syncHidden();
         form.submit();
       }
     });
+
+    // Sinkron sebelum submit
+    form.addEventListener('submit', () => syncHidden());
   });
 </script>
 @endsection
