@@ -130,7 +130,7 @@
              class="{{ $base }} {{ $blueFilled }}"
              aria-current="{{ $isCreate ? 'page' : 'false' }}">
             <svg class="{{ $icon }} text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 4h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
-            Buat Booking
+            Buat Jadwal
           </a>
         </nav>
 
@@ -151,7 +151,7 @@
         <div class="grid gap-2">
           <a href="{{ route('bookings.week') }}"   class="{{ $base }} {{ $isWeek ? 'btn-filled' : 'btn-outline' }}">Kalender</a>
           <a href="{{ route('bookings.index') }}"  class="{{ $base }} {{ $isIndex ? 'btn-filled' : 'btn-outline' }}">Jadwal</a>
-          <a href="{{ route('bookings.create') }}" class="{{ $base }} btn-filled">Buat Booking</a>
+          <a href="{{ route('bookings.create') }}" class="{{ $base }} btn-filled">Buat Jadwal</a>
         </div>
       </div>
     </div>

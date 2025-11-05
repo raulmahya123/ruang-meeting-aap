@@ -1,7 +1,7 @@
 {{-- resources/views/bookings/create.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Pengguna Baru')
+@section('title', 'Buat Jadwal')
 
 @section('content')
 @php
@@ -59,7 +59,7 @@
           </svg>
         </div>
         <div>
-          <h1 class="text-xl sm:text-2xl font-semibold text-[color:var(--brand-maroon)]">Buat Pengguna</h1>
+          <h1 class="text-xl sm:text-2xl font-semibold text-[color:var(--brand-maroon)]">Buat Jadwal</h1>
           <p class="text-xs text-gray-600">Zona waktu: {{ $tz }}.</p>
         </div>
       </div>
@@ -221,7 +221,7 @@
     <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
       <div class="flex items-center gap-2">
         <a href="{{ route('bookings.week') }}" class="{{ $btnOutline }}">Batal</a>
-        <button class="{{ $btnFilled }}">Simpan Pengguna</button>
+        <button class="{{ $btnFilled }}">Simpan Jadwal</button>
       </div>
     </div>
   </form>
