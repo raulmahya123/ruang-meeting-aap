@@ -145,14 +145,16 @@
                 <a href="{{ route('bookings.index', ['date'=>$start->toDateString(), 'room_id'=>$roomId ?? null]) }}"
                    class="{{ $btnOutlineBlue }} text-sm">Open day</a>
 
-                @if($token)
-                  {{-- Cancel via token; confirm first --}}
-                  <a href="{{ route('bookings.cancel', ['token'=>$token]) }}"
-                     class="{{ $btnFilledRed }} text-sm"
-                     onclick="return confirm('Batalkan booking \"{{ addslashes($b->title) }}\" pada {{ $start->format('d M Y H:i') }}?')">
-                    Batal
-                  </a>
-                @endif
+                @auth
+                  @if($token)
+                    {{-- Cancel hanya muncul untuk user yang sudah login --}}
+                    <a href="{{ route('bookings.cancel', ['token'=>$token]) }}"
+                       class="{{ $btnFilledRed }} text-sm"
+                       onclick="return confirm('Batalkan booking &quot;{{ addslashes($b->title) }}&quot; pada {{ $start->format('d M Y H:i') }}?')">
+                      Batal
+                    </a>
+                  @endif
+                @endauth
               </div>
             </div>
 

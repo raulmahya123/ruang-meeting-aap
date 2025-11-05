@@ -16,5 +16,6 @@ class DatabaseSeeder extends Seeder
     {
         // Panggil seeder ruangan (1 ruangan saja)
         $this->call(RoomSeeder::class);
+        $this->call(UserSeeder::class);
     }
 }

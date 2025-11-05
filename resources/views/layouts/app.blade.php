@@ -129,14 +129,36 @@
           <a href="{{ route('bookings.create') }}"
              class="{{ $base }} {{ $blueFilled }}"
              aria-current="{{ $isCreate ? 'page' : 'false' }}">
-            <svg class="{{ $icon }} text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 4h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+            <svg class="{{ $icon }} text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 4h2v6h6v2h-2v6h-2v-6H5v-2h6z"/></svg>
             Buat Jadwal
           </a>
         </nav>
 
-        <!-- Actions kanan (tanpa theme toggle) -->
+        <!-- Actions kanan: AUTH -->
         <div class="flex items-center gap-2">
-          <!-- kosongin atau taruh action lain nanti -->
+          @auth
+            <div class="hidden md:flex items-center gap-2">
+              <span class="text-sm text-white/90">Hi, <strong>{{ auth()->user()->name }}</strong></span>
+              {{-- optional: link profile breeze --}}
+              @if(Route::has('profile.edit'))
+                <a href="{{ route('profile.edit') }}" class="{{ $base }} btn-ghost-white text-sm">Profil</a>
+              @endif>
+              <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button class="{{ $base }} btn-outline text-sm bg-white">Logout</button>
+              </form>
+            </div>
+          @endauth
+
+          @guest
+            <div class="hidden md:flex items-center gap-2">
+              @if(Route::has('login'))
+                <a href="{{ route('login') }}" class="{{ $base }} btn-outline text-sm bg-white">Login</a>
+              @endif
+            </div>
+          @endguest
+
+          <!-- Hamburger -->
           <button type="button" class="md:hidden focus-ring inline-flex items-center justify-center h-10 w-10 rounded-full cta btn-outline"
                   aria-controls="mobile-menu" aria-expanded="false" onclick="toggleMobileMenu()">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -152,6 +174,28 @@
           <a href="{{ route('bookings.week') }}"   class="{{ $base }} {{ $isWeek ? 'btn-filled' : 'btn-outline' }}">Kalender</a>
           <a href="{{ route('bookings.index') }}"  class="{{ $base }} {{ $isIndex ? 'btn-filled' : 'btn-outline' }}">Jadwal</a>
           <a href="{{ route('bookings.create') }}" class="{{ $base }} btn-filled">Buat Jadwal</a>
+        </div>
+
+        <div class="mt-3 border-t border-white/20 pt-3 grid gap-2">
+          @auth
+            <div class="text-sm text-white/90">Hi, <strong>{{ auth()->user()->name }}</strong></div>
+            @if(Route::has('profile.edit'))
+              <a href="{{ route('profile.edit') }}" class="{{ $base }} btn-ghost-white">Profil</a>
+            @endif
+            <form method="POST" action="{{ route('logout') }}">
+              @csrf
+              <button class="{{ $base }} btn-outline bg-white">Logout</button>
+            </form>
+          @endauth
+
+          @guest
+            @if(Route::has('login'))
+              <a href="{{ route('login') }}" class="{{ $base }} btn-outline bg-white">Login</a>
+            @endif
+            @if(Route::has('register'))
+              <a href="{{ route('register') }}" class="{{ $base }} btn-filled">Register</a>
+            @endif
+          @endguest
         </div>
       </div>
     </div>
