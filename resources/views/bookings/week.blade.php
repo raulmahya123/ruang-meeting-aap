@@ -38,7 +38,7 @@
   $btnFilledRed   = 'inline-flex items-center gap-2 rounded bg-[color:var(--brand-maroon)] text-white px-3 py-2 border border-[color:var(--brand-maroon)] hover:brightness-[1.05] cta focus-ring';
 
   // Map label division (enum/string di kolom bookings.division)
-  $divOptions = [
+ $divOptions = [
     'HR'  => 'Human Resources',
     'SCM' => 'Supply Chain',
     'ENG' => 'Engineering',
@@ -46,7 +46,8 @@
     'OPS' => 'Operations',
     'FIN' => 'Finance',
     'IT'  => 'Information Technology',
-    'MIN' => 'Mining',
+    'PLT' => 'Plant',
+    'MGN' => 'Management',
   ];
 @endphp
 

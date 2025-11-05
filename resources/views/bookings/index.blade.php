@@ -33,7 +33,8 @@
     'OPS' => 'Operations',
     'FIN' => 'Finance',
     'IT'  => 'Information Technology',
-    'MIN' => 'Mining',
+    'PLT' => 'Plant',
+    'MGN' => 'Management',
   ];
 @endphp
 
