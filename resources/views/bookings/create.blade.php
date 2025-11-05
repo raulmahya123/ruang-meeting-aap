@@ -23,7 +23,8 @@
     'OPS' => 'Operations',
     'FIN' => 'Finance',
     'IT'  => 'Information Technology',
-    'MIN' => 'Mining',
+    'MGN' => 'Management',
+    'AST' => 'Asset Management',
   ];
   $selectedDiv = old('division', request('division'));
 @endphp
