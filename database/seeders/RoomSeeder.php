@@ -11,7 +11,7 @@ class RoomSeeder extends Seeder
     {
         // Hanya 1 ruangan
         Room::firstOrCreate(
-            ['name' => 'Ruang Rapat Utama'], // unique key
+            ['name' => 'Ruang Meeting Utama'], // unique key
             [
                 'capacity' => 10,
                 'location' => 'Lantai 3',
