@@ -5,16 +5,19 @@
 
 @section('content')
 @php
+  use Illuminate\Support\Str;
+
   // THEME TOKENS
   $btnFilled   = 'px-4 py-2 rounded-xl bg-[color:var(--brand-blue)] text-white border border-[color:var(--brand-blue)] hover:brightness-[1.05]';
   $btnOutline  = 'px-3 py-2 rounded-xl border border-[color:var(--brand-blue)] text-[color:var(--brand-blue)] bg-white hover:bg-blue-50';
   $chipMaroon  = 'inline-flex h-6 w-6 rounded-lg bg-[color:var(--brand-maroon)] text-white items-center justify-center text-[11px]';
   $labelBase   = 'block text-sm font-medium text-gray-700 mb-1';
   $inputBase   = 'w-full rounded-xl border border-gray-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-blue)] focus:border-[color:var(--brand-blue)]';
+  $selectBase  = 'rounded-xl border border-gray-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-blue)] focus:border-[color:var(--brand-blue)]';
   $cardWrap    = 'bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden';
-  $tz = 'Asia/Jakarta';
+  $tz          = 'Asia/Jakarta';
 
-  // Divisi (SESUAI ENUM MIGRASI: HR, SCM, ENG, HSE, OPS, FIN, IT, MIN)
+  // Divisi (SESUAI ENUM MIGRASI)
   $divOptions = [
     'HR'  => 'Human Resources',
     'SCM' => 'Supply Chain',
@@ -26,6 +29,22 @@
     'MIN' => 'Mining / Site',
   ];
   $selectedDiv = old('division', request('division'));
+
+  // Prefill dari query/old: YYYY-MM-DDTHH:MM
+  $startAtRaw = (string) old('start_at', request('start_at'));
+  $endAtRaw   = (string) old('end_at',   request('end_at'));
+
+  $startDatePref = $startAtRaw ? Str::of($startAtRaw)->substr(0,10) : '';
+  $startHourPref = $startAtRaw ? Str::of($startAtRaw)->substr(11,2) : '';
+  $startMinPref  = $startAtRaw ? Str::of($startAtRaw)->substr(14,2) : '';
+
+  $endDatePref = $endAtRaw ? Str::of($endAtRaw)->substr(0,10) : '';
+  $endHourPref = $endAtRaw ? Str::of($endAtRaw)->substr(11,2) : '';
+  $endMinPref  = $endAtRaw ? Str::of($endAtRaw)->substr(14,2) : '';
+
+  // List jam & menit untuk select (00..23, 00..59)
+  $hours  = array_map(fn($n)=> str_pad((string)$n,2,'0',STR_PAD_LEFT), range(0,23));
+  $minutes= array_map(fn($n)=> str_pad((string)$n,2,'0',STR_PAD_LEFT), range(0,59));
 @endphp
 
 <div class="max-w-4xl mx-auto">
@@ -63,7 +82,7 @@
     </div>
   @endif
 
-  <form method="post" action="{{ route('bookings.store') }}" class="space-y-6" id="booking-form">
+  <form method="post" action="{{ route('bookings.store') }}" class="space-y-6" id="booking-form" novalidate>
     @csrf
 
     {{-- Card: Detail Utama --}}
@@ -98,37 +117,57 @@
           @error('title') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Mulai (tanggal + waktu, 24 jam, tanpa AM/PM) --}}
+        {{-- Mulai: tanggal + (HH, MM) --}}
         <div>
           <label class="{{ $labelBase }}">Mulai ({{ $tz }})</label>
-          <div class="flex gap-2">
-            <input id="start_date" type="date" lang="id-ID"
-                   value="{{ old('start_date') ?: (request('start_at') ? \Illuminate\Support\Str::of(request('start_at'))->substr(0,10) : '') }}"
-                   class="{{ $inputBase }} flex-1" required>
-            <input id="start_time" type="time" lang="id-ID" step="60"
-                   value="{{ old('start_time') ?: (request('start_at') ? \Illuminate\Support\Str::of(request('start_at'))->substr(11,5) : '') }}"
-                   class="{{ $inputBase }} w-40" required>
+          <div class="grid grid-cols-5 gap-2">
+            <input id="start_date" type="date" class="{{ $inputBase }} col-span-3"
+                   value="{{ old('start_date') ?: $startDatePref }}" required>
+
+            <select id="start_hour" class="{{ $selectBase }} col-span-1" required>
+              <option value="">HH</option>
+              @foreach($hours as $h)
+                <option value="{{ $h }}" @selected(($startHourPref ?: old('start_hour')) === $h)>{{ $h }}</option>
+              @endforeach
+            </select>
+
+            <select id="start_min" class="{{ $selectBase }} col-span-1" required>
+              <option value="">MM</option>
+              @foreach($minutes as $m)
+                <option value="{{ $m }}" @selected(($startMinPref ?: old('start_min')) === $m)>{{ $m }}</option>
+              @endforeach
+            </select>
           </div>
-          <p class="text-[11px] text-gray-500 mt-1">Format 24-jam, contoh 14:30.</p>
+          <p class="text-[11px] text-gray-500 mt-1">Format 24-jam, contoh <span class="font-mono">14:30</span>.</p>
           @error('start_at') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Selesai (tanggal + waktu) --}}
+        {{-- Selesai: tanggal + (HH, MM) --}}
         <div>
           <label class="{{ $labelBase }}">Selesai ({{ $tz }})</label>
-          <div class="flex gap-2">
-            <input id="end_date" type="date" lang="id-ID"
-                   value="{{ old('end_date') ?: (request('end_at') ? \Illuminate\Support\Str::of(request('end_at'))->substr(0,10) : '') }}"
-                   class="{{ $inputBase }} flex-1" required>
-            <input id="end_time" type="time" lang="id-ID" step="60"
-                   value="{{ old('end_time') ?: (request('end_at') ? \Illuminate\Support\Str::of(request('end_at'))->substr(11,5) : '') }}"
-                   class="{{ $inputBase }} w-40" required>
+          <div class="grid grid-cols-5 gap-2">
+            <input id="end_date" type="date" class="{{ $inputBase }} col-span-3"
+                   value="{{ old('end_date') ?: $endDatePref }}" required>
+
+            <select id="end_hour" class="{{ $selectBase }} col-span-1" required>
+              <option value="">HH</option>
+              @foreach($hours as $h)
+                <option value="{{ $h }}" @selected(($endHourPref ?: old('end_hour')) === $h)>{{ $h }}</option>
+              @endforeach
+            </select>
+
+            <select id="end_min" class="{{ $selectBase }} col-span-1" required>
+              <option value="">MM</option>
+              @foreach($minutes as $m)
+                <option value="{{ $m }}" @selected(($endMinPref ?: old('end_min')) === $m)>{{ $m }}</option>
+              @endforeach
+            </select>
           </div>
-          <p class="text-[11px] text-gray-500 mt-1">Akan otomatis diisi +60 menit setelah “Mulai” diubah jika masih kosong.</p>
+          <p class="text-[11px] text-gray-500 mt-1">Jika kosong, akan otomatis +60 menit dari waktu mulai.</p>
           @error('end_at') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Hidden fields yang dipakai server (datetime-local ISO tanpa detik) --}}
+        {{-- Hidden untuk server --}}
         <input type="hidden" name="start_at" id="start_at" value="{{ old('start_at', request('start_at')) }}">
         <input type="hidden" name="end_at" id="end_at" value="{{ old('end_at', request('end_at')) }}">
       </div>
@@ -188,63 +227,68 @@
   </form>
 </div>
 
-{{-- Interaksi: gabung date+time ke hidden; auto +60m; Ctrl/Cmd+Enter submit --}}
+{{-- JS: gabung ke hidden; auto +60m; validasi end>=start; Ctrl/Cmd+Enter submit --}}
 <script>
   const pad = n => String(n).padStart(2,'0');
-  const toLocalInput = d =>
-    `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const pick = id => document.getElementById(id)?.value || '';
 
-  function readStart() {
-    const sd = document.getElementById('start_date').value;
-    const st = document.getElementById('start_time').value;
-    return (sd && st) ? new Date(`${sd}T${st}:00`) : null;
-  }
-  function readEnd() {
-    const ed = document.getElementById('end_date').value;
-    const et = document.getElementById('end_time').value;
-    return (ed && et) ? new Date(`${ed}T${et}:00`) : null;
+  function getDT(prefix){
+    const d = pick(prefix + '_date');
+    const h = pick(prefix + '_hour');
+    const m = pick(prefix + '_min');
+    if (!d || !h || !m) return null;
+    // Build Date in local time
+    return new Date(`${d}T${h}:${m}:00`);
   }
 
-  function syncHidden() {
-    const s = readStart();
-    const e = readEnd();
-    if (s) document.getElementById('start_at').value = toLocalInput(s);
-    if (e) document.getElementById('end_at').value   = toLocalInput(e);
+  function setDT(prefix, dateObj){
+    const d = document.getElementById(prefix + '_date');
+    const h = document.getElementById(prefix + '_hour');
+    const m = document.getElementById(prefix + '_min');
+    if (!dateObj) return;
+    d.value = `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}`;
+    h.value = pad(dateObj.getHours());
+    m.value = pad(dateObj.getMinutes());
   }
 
-  function autoEndPlus60IfEmpty() {
-    const s = readStart(); if (!s) return;
-    const endDate = document.getElementById('end_date');
-    const endTime = document.getElementById('end_time');
-    if (!endDate.value || !endTime.value) {
+  function syncHidden(){
+    const s = getDT('start');
+    const e = getDT('end');
+    if (s) document.getElementById('start_at').value =
+      `${s.getFullYear()}-${pad(s.getMonth()+1)}-${pad(s.getDate())}T${pad(s.getHours())}:${pad(s.getMinutes())}`;
+    if (e) document.getElementById('end_at').value =
+      `${e.getFullYear()}-${pad(e.getMonth()+1)}-${pad(e.getDate())}T${pad(e.getHours())}:${pad(e.getMinutes())}`;
+  }
+
+  function autoEndPlus60IfEmpty(){
+    const s = getDT('start'); if (!s) return;
+    const hasEnd = !!(pick('end_date') && pick('end_hour') && pick('end_min'));
+    if (!hasEnd){
       const e = new Date(s.getTime() + 60*60000);
-      endDate.value = `${e.getFullYear()}-${pad(e.getMonth()+1)}-${pad(e.getDate())}`;
-      endTime.value = `${pad(e.getHours())}:${pad(e.getMinutes())}`;
+      setDT('end', e);
     }
   }
 
-  function ensureEndAfterStart() {
-    const s = readStart(); const e = readEnd();
+  function ensureEndAfterStart(){
+    const s = getDT('start'); const e = getDT('end');
     if (!s || !e) return;
-    if (e <= s) {
+    if (e <= s){
       const adj = new Date(s.getTime() + 60*60000);
-      document.getElementById('end_date').value = `${adj.getFullYear()}-${pad(adj.getMonth()+1)}-${pad(adj.getDate())}`;
-      document.getElementById('end_time').value = `${pad(adj.getHours())}:${pad(adj.getMinutes())}`;
+      setDT('end', adj);
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('booking-form');
-    ['start_date','start_time','end_date','end_time'].forEach(id => {
-      const el = document.getElementById(id);
-      el?.addEventListener('change', () => {
-        if (id === 'start_date' || id === 'start_time') autoEndPlus60IfEmpty();
+    ['start_date','start_hour','start_min','end_date','end_hour','end_min'].forEach(id => {
+      document.getElementById(id)?.addEventListener('change', () => {
+        if (id.startsWith('start')) autoEndPlus60IfEmpty();
         ensureEndAfterStart();
         syncHidden();
       });
     });
 
-    // Prefill end jika start sudah ada dan end kosong (mis. dari query string)
+    // Prefill awal (dari hidden old/request), tetap sinkron
     autoEndPlus60IfEmpty();
     ensureEndAfterStart();
     syncHidden();
@@ -258,7 +302,6 @@
       }
     });
 
-    // Sinkron sebelum submit
     form.addEventListener('submit', () => syncHidden());
   });
 </script>
