@@ -142,7 +142,7 @@
               {{-- optional: link profile breeze --}}
               @if(Route::has('profile.edit'))
                 <a href="{{ route('profile.edit') }}" class="{{ $base }} btn-ghost-white text-sm">Profil</a>
-              @endif>
+              @endif
               <form method="POST" action="{{ route('logout') }}">
                 @csrf
                 <button class="{{ $base }} btn-outline text-sm bg-white">Logout</button>
@@ -158,11 +158,16 @@
             </div>
           @endguest
 
-          <!-- Hamburger -->
-          <button type="button" class="md:hidden focus-ring inline-flex items-center justify-center h-10 w-10 rounded-full cta btn-outline"
+          <!-- Hamburger (ikon hitam di mobile) -->
+          <button type="button"
+                  class="md:hidden focus-ring inline-flex items-center justify-center h-10 w-10 rounded-full cta btn-outline"
                   aria-controls="mobile-menu" aria-expanded="false" onclick="toggleMobileMenu()">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path d="M3 6h14M3 10h14M3 14h14"/>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-black" viewBox="0 0 24 24" aria-hidden="true">
+              <g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M4 6h16"/>
+                <path d="M4 12h16"/>
+                <path d="M4 18h16"/>
+              </g>
             </svg>
           </button>
         </div>

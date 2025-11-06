@@ -8,7 +8,7 @@
   use Illuminate\Support\Carbon;
   $tz = 'Asia/Jakarta';
 
-  // BUTTON & UI TOKENS (pakai CSS variable dari layout -> solid, no gradient)
+  // BUTTON & UI TOKENS
   $btnOutlineBlue = 'inline-flex items-center gap-2 rounded-full border border-[color:var(--brand-blue)] text-[color:var(--brand-blue)] px-4 py-2.5 hover:bg-blue-50 cta focus-ring';
   $btnFilledBlue  = 'inline-flex items-center gap-2 rounded-full bg-[color:var(--brand-blue)] text-white px-4 py-2.5 border border-[color:var(--brand-blue)] hover:brightness-[1.05] cta focus-ring';
   $btnFilledRed   = 'inline-flex items-center gap-2 rounded-full bg-[color:var(--brand-maroon)] text-white px-3 py-1.5 border border-[color:var(--brand-maroon)] hover:brightness-[1.05] cta focus-ring';
@@ -19,12 +19,12 @@
   $label          = 'block text-sm font-medium text-slate-700 mb-1';
   $inputBase      = 'w-full rounded-xl border border-slate-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-blue)] focus:border-[color:var(--brand-blue)]';
 
-  // Normalize $date (string → Carbon)
+  // Normalize $date
   $dateObj = ($date ?? null) instanceof Carbon
       ? $date->copy()
       : Carbon::parse($date ?? now($tz)->toDateString(), $tz);
 
-  // Map label division (karena bookings.division = enum/string, bukan relasi)
+  // Map label division
   $divOptions = [
     'HR'  => 'Human Resources',
     'SCM' => 'Supply Chain',
@@ -119,7 +119,6 @@
           $end   = $b->end_at->timezone($tz);
           $token = $b->cancel_token ?? null;
 
-          // Division label (fallback ke kode jika tidak terdaftar)
           $divisionCode  = $b->division ?? null;
           $divisionLabel = $divisionCode ? ($divOptions[$divisionCode] ?? $divisionCode) : null;
         @endphp
@@ -146,8 +145,19 @@
                    class="{{ $btnOutlineBlue }} text-sm">Open day</a>
 
                 @auth
+                  {{-- === Tambahan: Edit & Hapus hanya untuk user login === --}}
+                  <a href="{{ route('bookings.edit', $b) }}"
+                     class="{{ $btnOutlineBlue }} text-sm">Edit</a>
+
+                  <form method="POST" action="{{ route('bookings.destroy', $b) }}"
+                        onsubmit="return confirm('Hapus booking &quot;{{ addslashes($b->title) }}&quot; pada {{ $start->format('d M Y H:i') }}?')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="{{ $btnFilledRed }} text-sm">Hapus</button>
+                  </form>
+
                   @if($token)
-                    {{-- Cancel hanya muncul untuk user yang sudah login --}}
+                    {{-- Opsional: tombol Batal via token (jika tetap ingin ditampilkan untuk user login) --}}
                     <a href="{{ route('bookings.cancel', ['token'=>$token]) }}"
                        class="{{ $btnFilledRed }} text-sm"
                        onclick="return confirm('Batalkan booking &quot;{{ addslashes($b->title) }}&quot; pada {{ $start->format('d M Y H:i') }}?')">

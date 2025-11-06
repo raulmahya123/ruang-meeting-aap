@@ -53,7 +53,7 @@ class BookingController extends Controller
         $tz = 'Asia/Jakarta';
 
         // Samakan dengan enum di migration
-        $divisions = ['HR','SCM','ENG','HSE','OPS','FIN','IT','MIN','PLT','MGN'];
+        $divisions = ['HR', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'IT', 'MIN', 'PLT', 'MGN'];
 
         $data = $request->validate([
             'room_id'        => ['required', 'exists:rooms,id'],
@@ -208,5 +208,113 @@ class BookingController extends Controller
             'hourStart',
             'hourEnd'
         ));
+    }
+    /** Form edit (butuh auth via route middleware) */
+    public function edit(Booking $booking)
+    {
+        $this->authorizeIfExists('update', $booking); // opsional: pakai Policy kalau ada
+
+        $tz    = 'Asia/Jakarta';
+        $rooms = \App\Models\Room::orderBy('name')->get();
+
+        // Prefill nilai lokal untuk dipakai di view edit
+        $startLocal = $booking->start_at->timezone($tz)->format('Y-m-d\TH:i');
+        $endLocal   = $booking->end_at->timezone($tz)->format('Y-m-d\TH:i');
+
+        return view('bookings.edit', [
+            'rooms'       => $rooms,
+            'booking'     => $booking,
+            'start_local' => $startLocal,
+            'end_local'   => $endLocal,
+        ]);
+    }
+
+    /** Update booking (butuh auth via route middleware) */
+    public function update(Request $request, Booking $booking)
+    {
+        $this->authorizeIfExists('update', $booking); // opsional: pakai Policy kalau ada
+
+        $tz = 'Asia/Jakarta';
+
+        // Samakan dengan enum di migration (ikut yang sudah dipakai di store)
+        $divisions = ['HR', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'IT', 'MIN', 'PLT', 'MGN'];
+
+        $data = $request->validate([
+            'room_id'        => ['required', 'exists:rooms,id'],
+            'title'          => ['required', 'string', 'max:200'],
+            'start_at'       => ['required', 'date'],
+            'end_at'         => ['required', 'date', 'after:start_at'],
+            'booked_by_name' => ['required', 'string', 'max:120'],
+            'division'       => ['required', \Illuminate\Validation\Rule::in($divisions)],
+            'notes'          => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        // Normalisasi division ke UPPER
+        $data['division'] = strtoupper($data['division']);
+
+        // Konversi input lokal → UTC (simpan di DB)
+        $startUtc = \Illuminate\Support\Carbon::parse($data['start_at'], $tz)->timezone('UTC');
+        $endUtc   = \Illuminate\Support\Carbon::parse($data['end_at'],   $tz)->timezone('UTC');
+
+        // Cek bentrok di ruangan yang sama, KECUALI booking ini sendiri
+        $overlap = Booking::where('room_id', $data['room_id'])
+            ->where('id', '!=', $booking->id)
+            ->where('start_at', '<', $endUtc)
+            ->where('end_at',   '>', $startUtc)
+            ->exists();
+
+        if ($overlap) {
+            return back()->withInput()->withErrors([
+                'start_at' => 'Jadwal bentrok dengan booking lain untuk ruangan ini.'
+            ]);
+        }
+
+        $booking->update([
+            'room_id'        => $data['room_id'],
+            'title'          => $data['title'],
+            'start_at'       => $startUtc,
+            'end_at'         => $endUtc,
+            'booked_by_name' => $data['booked_by_name'],
+            'division'       => $data['division'],
+            'notes'          => $data['notes'] ?? null,
+            // 'cancel_token' tidak diubah saat update
+        ]);
+
+        return redirect()
+            ->route('bookings.index', [
+                'date'    => $booking->start_at->timezone($tz)->toDateString(),
+                'room_id' => $booking->room_id,
+            ])
+            ->with('ok', 'Booking berhasil diperbarui.');
+    }
+
+    /** Hapus booking (butuh auth via route middleware) */
+    public function destroy(Booking $booking)
+    {
+        $this->authorizeIfExists('delete', $booking); // opsional: pakai Policy kalau ada
+
+        $tz     = 'Asia/Jakarta';
+        $date   = $booking->start_at->timezone($tz)->toDateString();
+        $roomId = $booking->room_id;
+
+        $booking->delete();
+
+        return redirect()
+            ->route('bookings.index', compact('date', 'roomId'))
+            ->with('ok', 'Booking telah dihapus.');
+    }
+
+    /**
+     * Helper opsional untuk memanggil Policy hanya jika didefinisikan.
+     * Biar tidak error kalau belum buat Policy.
+     */
+    protected function authorizeIfExists(string $ability, $model)
+    {
+        try {
+            // Jika policy ada, ini akan jalan; kalau tidak, biarkan lewat
+            $this->authorize($ability, $model);
+        } catch (\Throwable $e) {
+            // no-op
+        }
     }
 }
