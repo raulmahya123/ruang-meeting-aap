@@ -28,6 +28,7 @@
     'IT'  => 'Information Technology',
     'PLT' => 'Plant',
     'MGN' => 'Management',
+    'AST' => 'Asset'
   ];
   $selectedDiv = old('division', request('division'));
 
