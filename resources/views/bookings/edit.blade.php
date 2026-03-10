@@ -30,6 +30,7 @@
     'MIN' => 'Mining',
     'PLT' => 'Plant',
     'MGN' => 'Management',
+    'AST' => 'Asset'
   ];
   $selectedDiv = old('division', $booking->division);
 

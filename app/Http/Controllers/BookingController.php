@@ -53,7 +53,7 @@ class BookingController extends Controller
         $tz = 'Asia/Jakarta';
 
         // Samakan dengan enum di migration
-        $divisions = ['HR', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'IT', 'MIN', 'PLT', 'MGN'];
+        $divisions = ['HR', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'IT', 'MIN', 'PLT', 'MGN','AST'];
 
         $data = $request->validate([
             'room_id'        => ['required', 'exists:rooms,id'],
@@ -237,7 +237,7 @@ class BookingController extends Controller
         $tz = 'Asia/Jakarta';
 
         // Samakan dengan enum di migration (ikut yang sudah dipakai di store)
-        $divisions = ['HR', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'IT', 'MIN', 'PLT', 'MGN'];
+        $divisions = ['HR', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'IT', 'MIN', 'PLT', 'MGN','AST'];
 
         $data = $request->validate([
             'room_id'        => ['required', 'exists:rooms,id'],

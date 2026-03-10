@@ -35,6 +35,7 @@
     'IT'  => 'Information Technology',
     'PLT' => 'Plant',
     'MGN' => 'Management',
+    'AST' => 'Asset'
   ];
 @endphp
 
