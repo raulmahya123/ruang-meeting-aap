@@ -5,299 +5,214 @@
 
 @section('content')
 @php
-  use Illuminate\Support\Str;
-
-  // THEME TOKENS
-  $btnFilled   = 'px-4 py-2 rounded-xl bg-[color:var(--brand-blue)] text-white border border-[color:var(--brand-blue)] hover:brightness-[1.05]';
-  $btnOutline  = 'px-3 py-2 rounded-xl border border-[color:var(--brand-blue)] text-[color:var(--brand-blue)] bg-white hover:bg-blue-50';
-  $btnDanger   = 'px-3 py-2 rounded-xl border border-[color:var(--brand-maroon)] text-white bg-[color:var(--brand-maroon)] hover:brightness-[1.05]';
-  $chipMaroon  = 'inline-flex h-6 w-6 rounded-lg bg-[color:var(--brand-maroon)] text-white items-center justify-center text-[11px]';
-  $labelBase   = 'block text-sm font-medium text-gray-700 mb-1';
-  $inputBase   = 'w-full rounded-xl border border-gray-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-blue)] focus:border-[color:var(--brand-blue)]';
-  $selectBase  = 'rounded-xl border border-gray-300 px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-blue)] focus:border-[color:var(--brand-blue)]';
-  $cardWrap    = 'bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden';
+  $btnFilled   = 'inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[color:var(--brand-blue)] text-white border border-[color:var(--brand-blue)] hover:brightness-[1.05] font-medium text-sm shadow-sm';
+  $btnOutline  = 'inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-gray-300 text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-800 font-medium text-sm';
+  $btnDanger   = 'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 text-white border border-red-600 hover:brightness-[1.05] font-medium text-sm shadow-sm';
+  $labelBase   = 'block text-sm font-medium text-gray-600 mb-1.5';
+  $inputBase   = 'w-full rounded-xl border border-gray-200 bg-gray-50/50 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-blue)]/20 focus:border-[color:var(--brand-blue)] focus:bg-white transition-all';
+  $cardWrap    = 'bg-white rounded-2xl border border-gray-200/80 shadow-sm';
+  $selectBase  = 'w-full rounded-xl border border-gray-200 bg-gray-50/50 py-2.5 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-blue)]/20 focus:border-[color:var(--brand-blue)] focus:bg-white transition-all cursor-pointer';
+  $iconLeft    = 'pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400';
+  $iconRight   = 'pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400';
   $tz          = 'Asia/Jakarta';
 
-  // Divisi (match controller)
   $divOptions = [
-    'HR'  => 'Human Resources',
+    'HRGA-IT' => 'HRGA-IT',
     'SCM' => 'Supply Chain',
     'ENG' => 'Engineering',
     'HSE' => 'Health, Safety & Environment',
     'OPS' => 'Operations',
     'FIN' => 'Finance',
-    'IT'  => 'Information Technology',
     'MIN' => 'Mining',
     'PLT' => 'Plant',
     'MGN' => 'Management',
     'AST' => 'Asset'
   ];
   $selectedDiv = old('division', $booking->division);
+  $startLocal  = old('start_at', $booking->start_at->timezone($tz)->format('Y-m-d\TH:i'));
+  $endLocal    = old('end_at',   $booking->end_at->timezone($tz)->format('Y-m-d\TH:i'));
 
-  // Prefill waktu lokal (dari controller kalau ada)
-  $startLocalStr = old('start_at', $start_local ?? $booking->start_at->timezone($tz)->format('Y-m-d\TH:i'));
-  $endLocalStr   = old('end_at',   $end_local   ?? $booking->end_at->timezone($tz)->format('Y-m-d\TH:i'));
-
-  // Pecah ke tanggal + HH + MM
-  $startDatePref = Str::of($startLocalStr)->substr(0,10);
-  $startHourPref = Str::of($startLocalStr)->substr(11,2);
-  $startMinPref  = Str::of($startLocalStr)->substr(14,2);
-
-  $endDatePref = Str::of($endLocalStr)->substr(0,10);
-  $endHourPref = Str::of($endLocalStr)->substr(11,2);
-  $endMinPref  = Str::of($endLocalStr)->substr(14,2);
-
-  $hours   = array_map(fn($n)=> str_pad((string)$n,2,'0',STR_PAD_LEFT), range(0,23));
-  $minutes = array_map(fn($n)=> str_pad((string)$n,2,'0',STR_PAD_LEFT), range(0,59));
-
-  $err = fn($name) => $errors->has($name) ? 'border-red-400 ring-2 ring-red-200' : '';
+  $err = fn($n) => $errors->has($n) ? 'border-red-400 ring-2 ring-red-200' : '';
 @endphp
 
-<div class="max-w-4xl mx-auto">
+<div class="max-w-lg mx-auto">
   {{-- Header --}}
-  <div class="sticky top-0 z-10 -mx-2 sm:mx-0 mb-4 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/70">
-    <div class="flex items-center justify-between py-3 px-2 sm:px-0">
-      <div class="flex items-center gap-3">
-        <div class="h-9 w-9 rounded-2xl bg-[color:var(--brand-maroon)] text-white grid place-items-center shadow">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[color:var(--brand-white)]" viewBox="0 0 24 24" fill="currentColor"><path d="M7 2a1 1 0 0 1 1 1v1h8V3a1 1 0 1 1 2 0v1h1a3 3 0 0 1 3 3v3H2V7a3 3 0 0 1 3-3h1V3a1 1 0 0 1 1-1Z"/><path d="M22 11v6a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-6h20Z"/></svg>
-        </div>
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold text-[color:var(--brand-maroon)]">Ubah Jadwal</h1>
-          <p class="text-xs text-gray-600">Zona waktu: {{ $tz }}.</p>
-        </div>
-      </div>
-      <a href="{{ route('bookings.index', ['date'=>$booking->start_at->timezone($tz)->toDateString(), 'room_id'=>$booking->room_id]) }}" class="{{ $btnOutline }}">Kembali</a>
+  <div class="mb-6 flex items-center justify-between">
+    <div>
+      <h1 class="text-lg font-semibold text-gray-900">Ubah Jadwal</h1>
+      <p class="text-sm text-gray-500">Zona waktu {{ $tz }}</p>
     </div>
-    <div class="h-[2px] w-full bg-[color:var(--brand-maroon)]"></div>
+    <a href="{{ route('bookings.index', ['date'=>$booking->start_at->timezone($tz)->toDateString(), 'room_id'=>$booking->room_id]) }}" class="{{ $btnOutline }}">
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Kembali
+    </a>
   </div>
 
-  {{-- Error global --}}
+  {{-- Error --}}
   @if ($errors->any())
-    <div class="mb-4 rounded-2xl border border-red-200 bg-red-50 text-red-900 p-3 text-sm">
-      <ul class="list-disc list-inside">
+    <div class="mb-5 rounded-2xl border border-red-200 bg-red-50 p-4">
+      <div class="flex items-center gap-2 text-red-800 text-sm font-medium mb-1">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Ada kesalahan
+      </div>
+      <ul class="list-disc list-inside text-sm text-red-700 space-y-0.5">
         @foreach ($errors->all() as $e) <li>{{ $e }}</li> @endforeach
       </ul>
     </div>
   @endif
 
-  {{-- ========== FORM UPDATE (UTAMA) ========== --}}
-  <form method="post" action="{{ route('bookings.update', $booking) }}" class="space-y-6" id="booking-form" novalidate>
+  <form method="post" action="{{ route('bookings.update', $booking) }}" id="booking-form" novalidate>
     @csrf
     @method('PUT')
 
-    {{-- Card: Detail Utama --}}
+    {{-- Detail Jadwal --}}
     <div class="{{ $cardWrap }}">
-      <div class="px-4 sm:px-6 py-4 border-b flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <span class="{{ $chipMaroon }}">1</span>
-          <h2 class="font-semibold text-gray-900">Detail Utama</h2>
-        </div>
-        <div class="text-xs text-gray-500">Perbarui informasi jadwal</div>
+      <div class="px-5 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-semibold text-gray-900">Detail Jadwal</h2>
       </div>
 
-      <div class="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <div class="sm:col-span-2">
-          <label class="{{ $labelBase }}">Ruangan <span class="text-red-600">*</span></label>
-          <select name="room_id" class="{{ $inputBase }} {{ $err('room_id') }}" required>
-            @foreach($rooms as $r)
-              <option value="{{ $r->id }}" @selected(old('room_id', $booking->room_id)==$r->id)>{{ $r->name }}</option>
-            @endforeach
-          </select>
-          @error('room_id') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        <div class="sm:col-span-2">
-          <label class="{{ $labelBase }}">Judul <span class="text-red-600">*</span></label>
-          <input type="text" name="title"
-                 value="{{ old('title', $booking->title) }}"
-                 maxlength="200"
-                 placeholder="Contoh: Sprint Retro, Weekly Ops, Presentasi Client"
-                 class="{{ $inputBase }} {{ $err('title') }}" required>
-          @error('title') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        {{-- Mulai --}}
+      <div class="p-5 space-y-4">
         <div>
-          <label class="{{ $labelBase }}">Mulai ({{ $tz }}) <span class="text-red-600">*</span></label>
-          <div class="grid grid-cols-5 gap-2">
-            <input id="start_date" type="date" class="{{ $inputBase }} {{ $err('start_at') }} col-span-3"
-                   value="{{ old('start_date') ?: $startDatePref }}" required>
-
-            <select id="start_hour" class="{{ $selectBase }} col-span-1" aria-label="Jam mulai" required>
-              <option value="">Jam</option>
-              @foreach($hours as $h)
-                <option value="{{ $h }}" @selected(($startHourPref ?: old('start_hour')) === $h)>{{ $h }}</option>
+          <label class="{{ $labelBase }}">Ruangan</label>
+          <div class="relative">
+            <svg class="{{ $iconLeft }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <select name="room_id" class="{{ $selectBase }} pl-10 pr-10 {{ $err('room_id') }}" required>
+              @foreach($rooms as $r)
+                <option value="{{ $r->id }}" @selected(old('room_id', $booking->room_id)==$r->id)>{{ $r->name }}</option>
               @endforeach
             </select>
-
-            <select id="start_min" class="{{ $selectBase }} col-span-1" aria-label="Menit mulai" required>
-              <option value="">Menit</option>
-              @foreach($minutes as $m)
-                <option value="{{ $m }}" @selected(($startMinPref ?: old('start_min')) === $m)>{{ $m }}</option>
-              @endforeach
-            </select>
+            <svg class="{{ $iconRight }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
           </div>
-          <p class="text-[11px] text-gray-500 mt-1">Format 24-jam. Contoh <span class="font-mono">14:30</span>.</p>
-          @error('start_at') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
+          @error('room_id') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
         </div>
 
-        {{-- Selesai --}}
         <div>
-          <label class="{{ $labelBase }}">Selesai ({{ $tz }}) <span class="text-red-600">*</span></label>
-          <div class="grid grid-cols-5 gap-2">
-            <input id="end_date" type="date" class="{{ $inputBase }} {{ $err('end_at') }} col-span-3"
-                   value="{{ old('end_date') ?: $endDatePref }}" required>
-
-            <select id="end_hour" class="{{ $selectBase }} col-span-1" aria-label="Jam selesai" required>
-              <option value="">Jam</option>
-              @foreach($hours as $h)
-                <option value="{{ $h }}" @selected(($endHourPref ?: old('end_hour')) === $h)>{{ $h }}</option>
-              @endforeach
-            </select>
-
-            <select id="end_min" class="{{ $selectBase }} col-span-1" aria-label="Menit selesai" required>
-              <option value="">Menit</option>
-              @foreach($minutes as $m)
-                <option value="{{ $m }}" @selected(($endMinPref ?: old('end_min')) === $m)>{{ $m }}</option>
-              @endforeach
-            </select>
+          <label class="{{ $labelBase }}">Judul Acara</label>
+          <div class="relative">
+            <svg class="{{ $iconLeft }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <input type="text" name="title"
+                   value="{{ old('title', $booking->title) }}"
+                   maxlength="200"
+                   placeholder="Cth: Sprint Retro, Weekly Ops"
+                   class="{{ $inputBase }} pl-10 {{ $err('title') }}" required>
           </div>
-          <p class="text-[11px] text-gray-500 mt-1">Waktu selesai harus setelah waktu mulai.</p>
-          @error('end_at') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
-        </div>
-
-        {{-- Hidden untuk server --}}
-        <input type="hidden" name="start_at" id="start_at" value="{{ old('start_at', $startLocalStr) }}">
-        <input type="hidden" name="end_at" id="end_at" value="{{ old('end_at', $endLocalStr) }}">
-      </div>
-    </div>
-
-    {{-- Card: Data Pengguna --}}
-    <div class="{{ $cardWrap }}">
-      <div class="px-4 sm:px-6 py-4 border-b flex items-center gap-2">
-        <span class="{{ $chipMaroon }}">2</span>
-        <h2 class="font-semibold text-gray-900">Data Pengguna <span class="text-red-600">*</span></h2>
-      </div>
-
-      <div class="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-        <div>
-          <label class="{{ $labelBase }}">Nama Pengguna <span class="text-red-600">*</span></label>
-          <input type="text" name="booked_by_name"
-                 value="{{ old('booked_by_name', $booking->booked_by_name) }}"
-                 maxlength="120"
-                 placeholder="Nama lengkap"
-                 class="{{ $inputBase }} {{ $err('booked_by_name') }}" required>
-          @error('booked_by_name') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
+          @error('title') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
         </div>
 
         <div>
-          <label class="{{ $labelBase }}">Divisi <span class="text-red-600">*</span></label>
-          <select name="division" class="{{ $inputBase }} {{ $err('division') }}" required>
-            <option value="">— pilih divisi —</option>
-            @foreach($divOptions as $code => $label)
-              <option value="{{ $code }}" @selected(old('division', $selectedDiv)==$code)>{{ $label }} ({{ $code }})</option>
-            @endforeach
-          </select>
-          @error('division') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
-          <p class="text-[11px] text-gray-500 mt-1">Kode tersedia: {{ implode(', ', array_keys($divOptions)) }}.</p>
+          <label class="{{ $labelBase }}">Mulai</label>
+          <div class="relative">
+            <svg class="{{ $iconLeft }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <input id="start_at_input" type="datetime-local" name="start_at"
+                   value="{{ $startLocal }}"
+                   class="{{ $inputBase }} pl-10 {{ $err('start_at') }}" required>
+          </div>
+          @error('start_at') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
         </div>
 
-        <div class="sm:col-span-2">
-          <label class="{{ $labelBase }}">Catatan</label>
-          <textarea name="notes" rows="4" placeholder="Info tambahan (opsional)"
-                    class="{{ $inputBase }} {{ $err('notes') }}">{{ old('notes', $booking->notes) }}</textarea>
-          @error('notes') <p class="text-xs text-red-700 mt-1">{{ $message }}</p> @enderror
+        <div>
+          <label class="{{ $labelBase }}">Selesai</label>
+          <div class="relative">
+            <svg class="{{ $iconLeft }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <input id="end_at_input" type="datetime-local" name="end_at"
+                   value="{{ $endLocal }}"
+                   class="{{ $inputBase }} pl-10 {{ $err('end_at') }}" required>
+          </div>
+          @error('end_at') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
         </div>
       </div>
     </div>
 
-    {{-- Aksi (update) --}}
-    <div class="flex items-center justify-between gap-3">
-      <a href="{{ route('bookings.index', ['date'=>$booking->start_at->timezone($tz)->toDateString(), 'room_id'=>$booking->room_id]) }}" class="{{ $btnOutline }}">Batal</a>
-      <button class="{{ $btnFilled }}">Simpan Perubahan</button>
+    {{-- Data Pemesan --}}
+    <div class="{{ $cardWrap }} mt-4">
+      <div class="px-5 py-4 border-b border-gray-100">
+        <h2 class="text-sm font-semibold text-gray-900">Data Pemesan</h2>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <div>
+          <label class="{{ $labelBase }}">Nama Lengkap</label>
+          <div class="relative">
+            <svg class="{{ $iconLeft }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <input type="text" name="booked_by_name"
+                   value="{{ old('booked_by_name', $booking->booked_by_name) }}"
+                   maxlength="120"
+                   placeholder="Nama lengkap"
+                   class="{{ $inputBase }} pl-10 {{ $err('booked_by_name') }}" required>
+          </div>
+          @error('booked_by_name') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+        </div>
+
+        <div>
+          <label class="{{ $labelBase }}">Divisi</label>
+          <div class="relative">
+            <svg class="{{ $iconLeft }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <select name="division" class="{{ $selectBase }} pl-10 pr-10 {{ $err('division') }}" required>
+              <option value="" disabled selected>Pilih divisi</option>
+              @foreach($divOptions as $code => $label)
+                <option value="{{ $code }}" @selected(old('division', $selectedDiv)==$code)>{{ $label }} ({{ $code }})</option>
+              @endforeach
+            </select>
+            <svg class="{{ $iconRight }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
+          @error('division') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+        </div>
+
+        <div>
+          <label class="{{ $labelBase }}">Catatan <span class="text-gray-400 font-normal">(opsional)</span></label>
+          <div class="relative">
+            <svg class="absolute left-3.5 top-3 h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <textarea name="notes" rows="3"
+                      placeholder="Info tambahan"
+                      class="{{ $inputBase }} pl-10 {{ $err('notes') }}">{{ old('notes', $booking->notes) }}</textarea>
+          </div>
+          @error('notes') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+        </div>
+      </div>
+    </div>
+
+    {{-- Aksi --}}
+    <div class="mt-5 flex items-center justify-between">
+      <a href="{{ route('bookings.index', ['date'=>$booking->start_at->timezone($tz)->toDateString(), 'room_id'=>$booking->room_id]) }}" class="{{ $btnOutline }}">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+        Batal
+      </a>
+      <div class="flex items-center gap-3">
+        <form method="POST" action="{{ route('bookings.destroy', $booking) }}"
+              onsubmit="return confirm('Hapus booking &quot;{{ addslashes($booking->title) }}&quot; pada {{ $booking->start_at->timezone($tz)->format('d M Y H:i') }}?')">
+          @csrf
+          @method('DELETE')
+          <button type="submit" class="{{ $btnDanger }}">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Hapus
+          </button>
+        </form>
+        <button class="{{ $btnFilled }}">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          Simpan
+        </button>
+      </div>
     </div>
   </form>
-
-  {{-- ========== FORM DELETE TERPISAH (bukan nested) ========== --}}
-  <div class="mt-3 flex justify-end">
-    <form method="POST" action="{{ route('bookings.destroy', $booking) }}"
-          onsubmit="return confirm('Hapus booking &quot;{{ addslashes($booking->title) }}&quot; pada {{ $booking->start_at->timezone($tz)->format('d M Y H:i') }}?')">
-      @csrf
-      @method('DELETE')
-      <button type="submit" class="{{ $btnDanger }}">Hapus</button>
-    </form>
-  </div>
 </div>
 
-{{-- JS: sinkron hidden; validasi end>start; auto-focus error --}}
+{{-- JS --}}
 <script>
-  const pad = n => String(n).padStart(2,'0');
-  const pick = id => document.getElementById(id)?.value || '';
-
-  function getDT(prefix){
-    const d = pick(prefix + '_date');
-    const h = pick(prefix + '_hour');
-    const m = pick(prefix + '_min');
-    if (!d || !h || !m) return null;
-    return new Date(`${d}T${h}:${m}:00`);
-  }
-
-  function setDT(prefix, dateObj){
-    const d = document.getElementById(prefix + '_date');
-    const h = document.getElementById(prefix + '_hour');
-    const m = document.getElementById(prefix + '_min');
-    if (!dateObj) return;
-    d.value = `${dateObj.getFullYear()}-${pad(dateObj.getMonth()+1)}-${pad(dateObj.getDate())}`;
-    h.value = pad(dateObj.getHours());
-    m.value = pad(dateObj.getMinutes());
-  }
-
-  function syncHidden(){
-    const s = getDT('start');
-    const e = getDT('end');
-    if (s) document.getElementById('start_at').value =
-      `${s.getFullYear()}-${pad(s.getMonth()+1)}-${pad(s.getDate())}T${pad(s.getHours())}:${pad(s.getMinutes())}`;
-    if (e) document.getElementById('end_at').value =
-      `${e.getFullYear()}-${pad(e.getMonth()+1)}-${pad(e.getDate())}T${pad(e.getHours())}:${pad(e.getMinutes())}`;
-  }
-
-  function ensureEndAfterStart(){
-    const s = getDT('start'); const e = getDT('end');
-    if (!s || !e) return;
-    if (e <= s){
-      const adj = new Date(s.getTime() + 60*60000);
-      setDT('end', adj);
-    }
-  }
-
   document.addEventListener('DOMContentLoaded', () => {
-    ['start_date','start_hour','start_min','end_date','end_hour','end_min'].forEach(id => {
-      document.getElementById(id)?.addEventListener('change', () => {
-        ensureEndAfterStart();
-        syncHidden();
-      });
-    });
+    const form = document.getElementById('booking-form');
+    const start = document.getElementById('start_at_input');
+    const end = document.getElementById('end_at_input');
 
-    ensureEndAfterStart();
-    syncHidden();
-
-    // auto-focus field error pertama
-    const firstErr = document.querySelector('.ring-red-200, .border-red-400');
-    if (firstErr) {
-      firstErr.focus({ preventScroll: false });
-      firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    function validate() {
+      if (start.value && end.value && end.value <= start.value) {
+        const s = new Date(start.value);
+        s.setMinutes(s.getMinutes() + 60);
+        end.value = s.toISOString().slice(0, 16);
+      }
     }
 
-    // Ctrl/Cmd + Enter submit
-    const form = document.getElementById('booking-form');
-    form.addEventListener('keydown', (ev) => {
-      if ((ev.ctrlKey || ev.metaKey) && ev.key === 'Enter') {
-        ev.preventDefault();
-        syncHidden();
-        form.submit();
-      }
-    });
-    form.addEventListener('submit', () => syncHidden());
+    start.addEventListener('change', validate);
+    end.addEventListener('change', validate);
   });
 </script>
 @endsection

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Booking;
 use App\Models\Room;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
@@ -53,7 +54,7 @@ class BookingController extends Controller
         $tz = 'Asia/Jakarta';
 
         // Samakan dengan enum di migration
-        $divisions = ['HR', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'IT', 'MIN', 'PLT', 'MGN','AST'];
+        $divisions = ['HRGA-IT', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'MIN', 'PLT', 'MGN', 'AST'];
 
         $data = $request->validate([
             'room_id'        => ['required', 'exists:rooms,id'],
@@ -72,28 +73,35 @@ class BookingController extends Controller
         $startUtc = Carbon::parse($data['start_at'], $tz)->timezone('UTC');
         $endUtc   = Carbon::parse($data['end_at'],   $tz)->timezone('UTC');
 
-        // Cek bentrok (di UTC)
-        $overlap = Booking::where('room_id', $data['room_id'])
-            ->where('start_at', '<', $endUtc)
-            ->where('end_at',   '>', $startUtc)
-            ->exists();
+        // Cek bentrok (di UTC) — pakai transaction + lockForUpdate untuk hindari race condition
+        $booking = DB::transaction(function () use ($data, $startUtc, $endUtc) {
+            $overlap = Booking::where('room_id', $data['room_id'])
+                ->where('start_at', '<', $endUtc)
+                ->where('end_at',   '>', $startUtc)
+                ->lockForUpdate()
+                ->exists();
 
-        if ($overlap) {
+            if ($overlap) {
+                return null;
+            }
+
+            return Booking::create([
+                'room_id'        => $data['room_id'],
+                'title'          => $data['title'],
+                'start_at'       => $startUtc,
+                'end_at'         => $endUtc,
+                'booked_by_name' => $data['booked_by_name'],
+                'division'       => $data['division'],
+                'notes'          => $data['notes'] ?? null,
+                'cancel_token'   => Str::random(48),
+            ]);
+        });
+
+        if (!$booking) {
             return back()->withInput()->withErrors([
                 'start_at' => 'Jadwal bentrok dengan booking lain untuk ruangan ini.'
             ]);
         }
-
-        $booking = Booking::create([
-            'room_id'        => $data['room_id'],
-            'title'          => $data['title'],
-            'start_at'       => $startUtc,
-            'end_at'         => $endUtc,
-            'booked_by_name' => $data['booked_by_name'],
-            'division'       => $data['division'],
-            'notes'          => $data['notes'] ?? null,
-            'cancel_token'   => Str::random(48),
-        ]);
 
         return redirect()
             ->route('bookings.index', [
@@ -237,7 +245,7 @@ class BookingController extends Controller
         $tz = 'Asia/Jakarta';
 
         // Samakan dengan enum di migration (ikut yang sudah dipakai di store)
-        $divisions = ['HR', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'IT', 'MIN', 'PLT', 'MGN','AST'];
+        $divisions = ['HRGA-IT', 'SCM', 'ENG', 'HSE', 'OPS', 'FIN', 'MIN', 'PLT', 'MGN', 'AST'];
 
         $data = $request->validate([
             'room_id'        => ['required', 'exists:rooms,id'],
@@ -257,28 +265,38 @@ class BookingController extends Controller
         $endUtc   = \Illuminate\Support\Carbon::parse($data['end_at'],   $tz)->timezone('UTC');
 
         // Cek bentrok di ruangan yang sama, KECUALI booking ini sendiri
-        $overlap = Booking::where('room_id', $data['room_id'])
-            ->where('id', '!=', $booking->id)
-            ->where('start_at', '<', $endUtc)
-            ->where('end_at',   '>', $startUtc)
-            ->exists();
+        $bookingId = $booking->id;
+        $updated = DB::transaction(function () use ($data, $booking, $bookingId, $startUtc, $endUtc) {
+            $overlap = Booking::where('room_id', $data['room_id'])
+                ->where('id', '!=', $bookingId)
+                ->where('start_at', '<', $endUtc)
+                ->where('end_at',   '>', $startUtc)
+                ->lockForUpdate()
+                ->exists();
 
-        if ($overlap) {
+            if ($overlap) {
+                return null;
+            }
+
+            $booking->update([
+                'room_id'        => $data['room_id'],
+                'title'          => $data['title'],
+                'start_at'       => $startUtc,
+                'end_at'         => $endUtc,
+                'booked_by_name' => $data['booked_by_name'],
+                'division'       => $data['division'],
+                'notes'          => $data['notes'] ?? null,
+                // 'cancel_token' tidak diubah saat update
+            ]);
+
+            return $booking;
+        });
+
+        if (!$updated) {
             return back()->withInput()->withErrors([
                 'start_at' => 'Jadwal bentrok dengan booking lain untuk ruangan ini.'
             ]);
         }
-
-        $booking->update([
-            'room_id'        => $data['room_id'],
-            'title'          => $data['title'],
-            'start_at'       => $startUtc,
-            'end_at'         => $endUtc,
-            'booked_by_name' => $data['booked_by_name'],
-            'division'       => $data['division'],
-            'notes'          => $data['notes'] ?? null,
-            // 'cancel_token' tidak diubah saat update
-        ]);
 
         return redirect()
             ->route('bookings.index', [

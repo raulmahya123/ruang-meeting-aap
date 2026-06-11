@@ -17,7 +17,7 @@
 
   <style>
     :root{
-      --brand-maroon:#7a1023;
+      --brand-maroon:#bb9974;
       --brand-blue:#1252cc;
       --bg:#f7f7fb;
     }

@@ -38,14 +38,13 @@
   $btnFilledRed   = 'inline-flex items-center gap-2 rounded bg-[color:var(--brand-maroon)] text-white px-3 py-2 border border-[color:var(--brand-maroon)] hover:brightness-[1.05] cta focus-ring';
 
   // Map label division (enum/string di kolom bookings.division)
- $divOptions = [
-    'HR'  => 'Human Resources',
+  $divOptions = [
+    'HRGA-IT' => 'HRGA-IT',
     'SCM' => 'Supply Chain',
     'ENG' => 'Engineering',
     'HSE' => 'Health, Safety & Environment',
     'OPS' => 'Operations',
     'FIN' => 'Finance',
-    'IT'  => 'Information Technology',
     'PLT' => 'Plant',
     'MGN' => 'Management',
     'AST' => 'Asset'
@@ -207,26 +206,26 @@
           ];
         @endphp
 
-        <button
+         <button
           type="button"
           class="absolute text-left text-xs p-2 rounded-xl border cta focus-ring overflow-hidden group"
-          style="top: {{ $topPx }}px; height: {{ $heightPx }}px; left: {{ $leftPct }}%; width: {{ $laneWidthPct }}%;
-                 background-color: #fff7f7; border-color: color-mix(in oklab, var(--brand-maroon) 35%, #ffffff 65%);"
+           style="top: {{ $topPx }}px; height: {{ $heightPx }}px; left: {{ $leftPct }}%; width: {{ $laneWidthPct }}%;
+                  background-color: #bb9974; border-color: #bb9974;"
           onclick='CalendarWeek.openItem(@json($payload)); event.stopPropagation();'
         >
           <div class="flex items-center gap-2">
-            <span class="inline-block h-2 w-2 rounded-full bg-[color:var(--brand-maroon)]"></span>
-            <div class="font-semibold text-slate-900 truncate">{{ $b->title }}</div>
+            <span class="inline-block h-2 w-2 rounded-full bg-white"></span>
+            <div class="font-semibold text-white truncate">{{ $b->title }}</div>
           </div>
-          <div class="mt-0.5 text-[11px] text-slate-600 truncate">
-            <span class="text-[color:var(--brand-maroon)] font-medium">{{ $start->format('H:i') }}–{{ $end->format('H:i') }}</span>
+          <div class="mt-0.5 text-[11px] text-white/80 truncate">
+            <span class="text-white font-medium">{{ $start->format('H:i') }}–{{ $end->format('H:i') }}</span>
             @if($roomName) · {{ $roomName }} @endif
             @if($divisionName) · {{ $divisionName }} @endif
           </div>
 
           {{-- Hover affordance (solid, no gradient) --}}
           <div class="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-               style="box-shadow: inset 0 0 0 1px var(--brand-maroon), 0 0 0 2px color-mix(in oklab, var(--brand-maroon) 20%, transparent); border-radius: 0.75rem;"></div>
+               style="box-shadow: inset 0 0 0 1px #ffffff, 0 0 0 2px color-mix(in oklab, #ffffff 30%, transparent); border-radius: 0.75rem;"></div>
         </button>
       @endforeach
 
@@ -258,7 +257,7 @@
   <div class="absolute inset-0 bg-black/40" onclick="CalendarWeek.close()"></div>
   <div class="relative w-full sm:max-w-lg bg-white rounded-2xl shadow-xl m-2 sm:m-4 overflow-hidden">
     <div class="px-4 py-3 border-b flex items-center justify-between">
-      <h3 id="cw-title" class="font-semibold text-lg truncate text-[color:var(--brand-maroon)]">Booking</h3>
+      <h3 id="cw-title" class="font-semibold text-lg truncate text-[color:#bb9974]">Booking</h3>
       <button type="button" class="p-1 rounded hover:bg-slate-100" onclick="CalendarWeek.close()">✕</button>
     </div>
 

@@ -26,13 +26,12 @@
 
   // Map label division
   $divOptions = [
-    'HR'  => 'Human Resources',
+    'HRGA-IT' => 'HRGA-IT',
     'SCM' => 'Supply Chain',
     'ENG' => 'Engineering',
     'HSE' => 'Health, Safety & Environment',
     'OPS' => 'Operations',
     'FIN' => 'Finance',
-    'IT'  => 'Information Technology',
     'PLT' => 'Plant',
     'MGN' => 'Management',
     'AST' => 'Asset'

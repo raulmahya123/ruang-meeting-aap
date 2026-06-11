@@ -19,8 +19,8 @@
   <style>
     /* === Brand: solid, no gradient, high-contrast (light only) === */
     :root{
-      --brand-maroon:#7A1023;
-      --brand-maroon-ink:#5d0c1a;
+      --brand-maroon:#bb9974;
+      --brand-maroon-ink:#9a7a56;
       --brand-blue:#1252CC;
       --brand-blue-ink:#0d3e99;
       --brand-white:#ffffff;
@@ -83,8 +83,8 @@
     Lewati ke konten
   </a>
 
-  <!-- NAVBAR: maroon solid, ikon & tombol biru -->
-  <header class="sticky top-0 z-40 border-b border-slate-200/20 bg-[color:var(--brand-maroon)] text-white">
+  <!-- NAVBAR: solid #bb9974, ikon & tombol biru -->
+  <header class="sticky top-0 z-40 border-b border-slate-200/20 bg-[color:#bb9974] text-white">
     <div class="max-w-7xl mx-auto px-4">
       <div class="h-16 flex items-center justify-between gap-3">
 
